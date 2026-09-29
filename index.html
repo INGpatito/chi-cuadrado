@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Suite de Pruebas Estadísticas para Números Pseudoaleatorios</title>
+  <link rel="stylesheet" href="web/style.css">
+</head>
+<body>
+
+  <!-- Encabezado Superior -->
+  <header>
+    <div class="logo-area">
+      <div class="logo-icon">🔬</div>
+      <div class="logo-text">
+        <h1>SUITE DE PRUEBAS DE SIMULACIÓN</h1>
+        <p>Validación de Números Pseudoaleatorios U[0, 1)</p>
+      </div>
+    </div>
+    <div class="header-status">
+      <div class="status-pill" id="headerCount">Muestra: 100 números</div>
+      <div class="status-pill success" id="headerScore">5/5 Aprobadas</div>
+    </div>
+  </header>
+
+  <!-- Contenedor Principal de la App -->
+  <div class="app-container">
+
+    <!-- Barra Lateral de Navegación (Flujo Guiado) -->
+    <aside class="sidebar">
+      <div>
+        <div class="sidebar-title">Pasos del Proceso</div>
+        <ul class="nav-tabs">
+          <li><button class="nav-tab-btn active" data-tab="datos">1. 📊 Cargar / Generar</button></li>
+          <li><button class="nav-tab-btn" data-tab="chi">2. 📈 Chi-Cuadrado (χ²)</button></li>
+          <li><button class="nav-tab-btn" data-tab="ks">3. 📉 Kolmogorov-S.</button></li>
+          <li><button class="nav-tab-btn" data-tab="autocorr">4. 🔗 Autocorrelación</button></li>
+          <li><button class="nav-tab-btn" data-tab="poker">5. 🃏 Póker 3 Dígitos</button></li>
+          <li><button class="nav-tab-btn" data-tab="montecarlo">6. 🎯 Monte Carlo (π)</button></li>
+          <li><button class="nav-tab-btn" data-tab="resumen">7. 📋 Resumen Total</button></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-actions">
+        <div class="sidebar-title">Acciones Rápidas</div>
+        <button class="btn btn-primary btn-block" id="quickEvaluarTodo">⚡ Evaluar Todo</button>
+        <button class="btn btn-secondary btn-block" id="quickCargarEjemplo">📂 Cargar Ejemplo</button>
+        <button class="btn btn-secondary btn-block" id="quickGenerar100">🎲 Generar 100 LCG</button>
+      </div>
+    </aside>
+
+    <!-- Área de Contenido Principal -->
+    <main class="content-area">
+
+      <!-- ============================================================ -->
+      <!-- PESTAÑA 1: DATOS Y CARGA -->
+      <!-- ============================================================ -->
+      <section class="tab-pane active" id="pane-datos">
+        <div class="pane-header">
+          <h2>1. Gestión y Carga de Números Pseudoaleatorios</h2>
+          <p>Genera números utilizando generadores congruenciales o carga tu propio archivo de texto (.txt).</p>
+        </div>
+
+        <div class="preset-group">
+          <button class="btn-preset active" id="btnPreset100">Muestra Estándar (100 LCG)</button>
+          <button class="btn-preset" id="btnPreset500">Muestra Grande (500 LCG)</button>
+          <label class="btn-preset" style="cursor: pointer;">
+            📁 Subir archivo .txt
+            <input type="file" id="fileInput" accept=".txt,.csv" style="display: none;">
+          </label>
+        </div>
+
+        <div class="grid-2">
+          <!-- Columna 1: Controles -->
+          <div class="card">
+            <div class="card-title">⚙️ Generadores Matemáticos</div>
+
+            <div class="form-group">
+              <label>Cantidad de números (N):</label>
+              <input type="number" id="lcgN" class="form-control" value="100" min="10" max="10000">
+            </div>
+
+            <div class="form-group">
+              <label>Semilla inicial (X0):</label>
+              <input type="number" id="lcgSeed" class="form-control" value="12345" min="1">
+            </div>
+
+            <button class="btn btn-primary btn-block" id="btnGenLcg" style="margin-bottom: 1.5rem;">
+              🎲 Generar con LCG (Xn+1 = (aX + c) mod m)
+            </button>
+
+            <hr style="border: 0; border-top: 1px solid var(--border-color); margin-bottom: 1.25rem;">
+
+            <div class="form-group">
+              <label>Generador rápido Math.random() (N):</label>
+              <input type="number" id="randN" class="form-control" value="100" min="10" max="10000">
+            </div>
+
+            <button class="btn btn-secondary btn-block" id="btnGenRand">
+              Generar con Math.random()
+            </button>
+          </div>
+
+          <!-- Columna 2: Visor de datos -->
+          <div class="card">
+            <div class="card-title">
+              📋 Secuencia de Números Ri
+              <span class="status-pill" id="datosCountBadge" style="margin-left: auto; font-size: 0.75rem;">100 números</span>
+            </div>
+
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Índice</th>
+                    <th>Valor Ri</th>
+                    <th>3 Dígitos</th>
+                  </tr>
+                </thead>
+                <tbody id="tbodyDatos">
+                  <!-- Llenado dinámico -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="pane-nav">
+          <div></div>
+          <button class="btn btn-primary btn-next">Siguiente: Prueba Chi-Cuadrado ➡</button>
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <!-- PESTAÑA 2: CHI-CUADRADO -->
+      <!-- ============================================================ -->
+      <section class="tab-pane" id="pane-chi">
+        <div class="pane-header">
+          <h2>2. Prueba de Uniformidad: Chi-Cuadrado (χ²)</h2>
+          <p>Divide el intervalo [0, 1) en <em>k</em> subintervalos y compara las frecuencias observadas con las esperadas.</p>
+        </div>
+
+        <div class="preset-group">
+          <label style="color: var(--text-muted); font-size: 0.85rem; align-self: center;">Nivel de significancia (α):</label>
+          <button class="btn-preset active" data-chi-alpha="0.05">α = 0.05 (95% confianza)</button>
+          <button class="btn-preset" data-chi-alpha="0.01">α = 0.01 (99% confianza)</button>
+          <div style="margin-left: auto; display: flex; align-items: center; gap: 0.5rem;">
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Intervalos (k):</label>
+            <input type="number" id="chiKInput" class="form-control" value="10" min="2" max="30" style="width: 70px;">
+          </div>
+        </div>
+
+        <div class="verdict-banner success" id="chiVerdict">
+          <!-- Llenado dinámico -->
+        </div>
+
+        <div class="chart-container">
+          <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem; font-weight: 600;">
+            Histograma de Frecuencias Observadas (Oi) por cada clase:
+          </div>
+          <div class="bar-chart" id="chiBarChart">
+            <!-- Columnas dinámicas -->
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Clase</th>
+                <th>Rango [a, b)</th>
+                <th>Oi (Observada)</th>
+                <th>Ei (Esperada)</th>
+                <th>Oi - Ei</th>
+                <th>(Oi - Ei)² / Ei</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyChi"></tbody>
+          </table>
+        </div>
+
+        <div class="pane-nav">
+          <button class="btn btn-secondary btn-prev">⬅ Anterior</button>
+          <button class="btn btn-primary btn-next">Siguiente: Kolmogorov-Smirnov ➡</button>
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <!-- PESTAÑA 3: KOLMOGOROV-SMIRNOV -->
+      <!-- ============================================================ -->
+      <section class="tab-pane" id="pane-ks">
+        <div class="pane-header">
+          <h2>3. Prueba de Uniformidad: Kolmogorov-Smirnov (K-S)</h2>
+          <p>Calcula la desviación vertical máxima <em>D</em> entre la función empírica observada y la diagonal teórica continua.</p>
+        </div>
+
+        <div class="preset-group">
+          <label style="color: var(--text-muted); font-size: 0.85rem; align-self: center;">Nivel de significancia (α):</label>
+          <button class="btn-preset active" data-ks-alpha="0.05">α = 0.05 (95% confianza)</button>
+          <button class="btn-preset" data-ks-alpha="0.01">α = 0.01 (99% confianza)</button>
+        </div>
+
+        <div class="verdict-banner success" id="ksVerdict"></div>
+
+        <div class="grid-3">
+          <div class="metric-box">
+            <div class="metric-label">Diferencia Positiva Máxima (D+)</div>
+            <div class="metric-value" id="ksDPlus">0.00000</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">Diferencia Negativa Máxima (D-)</div>
+            <div class="metric-value" id="ksDMinus">0.00000</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">Valor Crítico D(α, N)</div>
+            <div class="metric-value" id="ksDCrit">0.00000</div>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>i</th>
+                <th>R(i) ordenado</th>
+                <th>i / N</th>
+                <th>(i - 1) / N</th>
+                <th>D+ = i/N - Ri</th>
+                <th>D- = Ri - (i-1)/N</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyKs"></tbody>
+          </table>
+        </div>
+
+        <div class="pane-nav">
+          <button class="btn btn-secondary btn-prev">⬅ Anterior</button>
+          <button class="btn btn-primary btn-next">Siguiente: Autocorrelación ➡</button>
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <!-- PESTAÑA 4: AUTOCORRELACIÓN -->
+      <!-- ============================================================ -->
+      <section class="tab-pane" id="pane-autocorr">
+        <div class="pane-header">
+          <h2>4. Prueba de Independencia: Autocorrelación</h2>
+          <p>Verifica si existe dependencia estadística entre números separados por una distancia o retardo <em>l</em> constante.</p>
+        </div>
+
+        <div class="preset-group">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Posición inicial (i):</label>
+            <input type="number" id="autoIInput" class="form-control" value="1" min="1" max="50" style="width: 70px;">
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Retardo / Salto (l):</label>
+            <input type="number" id="autoLInput" class="form-control" value="2" min="1" max="20" style="width: 70px;">
+          </div>
+        </div>
+
+        <div class="verdict-banner success" id="autoVerdict"></div>
+
+        <div class="grid-3">
+          <div class="metric-box">
+            <div class="metric-label">Pares Evaluados (M + 1)</div>
+            <div class="metric-value" id="autoPares">0 pares</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">Estimador Autocorrelación (ρ̂)</div>
+            <div class="metric-value" id="autoRho">0.000000</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">Estadístico Z0 Calculado</div>
+            <div class="metric-value" id="autoZ">0.0000</div>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Par #</th>
+                <th>Primer Término</th>
+                <th>Segundo Término</th>
+                <th>Producto (R1 * R2)</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyAuto"></tbody>
+          </table>
+        </div>
+
+        <div class="pane-nav">
+          <button class="btn btn-secondary btn-prev">⬅ Anterior</button>
+          <button class="btn btn-primary btn-next">Siguiente: Prueba de Póker ➡</button>
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <!-- PESTAÑA 5: PÓKER (3 DÍGITOS) -->
+      <!-- ============================================================ -->
+      <section class="tab-pane" id="pane-poker">
+        <div class="pane-header">
+          <h2>5. Prueba de Aleatoriedad: Póker (3 Dígitos)</h2>
+          <p>Clasifica los 3 primeros decimales en combinaciones de: Todos Diferentes (72%), Un Par (27%) y Tercia (1%).</p>
+        </div>
+
+        <div class="verdict-banner success" id="pokerVerdict"></div>
+
+        <div class="chart-container">
+          <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem; font-weight: 600;">
+            Distribución de Manos Observadas:
+          </div>
+          <div class="bar-chart" id="pokerBarChart"></div>
+        </div>
+
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Mano de Póker</th>
+                <th>P(E) Teórica</th>
+                <th>Oi (Observada)</th>
+                <th>Ei (Esperada)</th>
+                <th>Oi - Ei</th>
+                <th>(Oi - Ei)² / Ei</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyPoker"></tbody>
+          </table>
+        </div>
+
+        <div class="pane-nav">
+          <button class="btn btn-secondary btn-prev">⬅ Anterior</button>
+          <button class="btn btn-primary btn-next">Siguiente: Monte Carlo ➡</button>
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <!-- PESTAÑA 6: MONTE CARLO -->
+      <!-- ============================================================ -->
+      <section class="tab-pane" id="pane-montecarlo">
+        <div class="pane-header">
+          <h2>6. Simulación de Monte Carlo: Estimación de π</h2>
+          <p>Evalúa pares (x, y) en el cuadrado unitario. La proporción de puntos que caen dentro del cuadrante circular aproxima π/4.</p>
+        </div>
+
+        <div class="verdict-banner success" id="mcVerdict"></div>
+
+        <div class="grid-2">
+          <!-- Lienzo 2D -->
+          <div class="canvas-container">
+            <canvas id="monteCarloCanvas" width="380" height="380"></canvas>
+            <div style="margin-top: 0.75rem; font-size: 0.8rem; color: var(--text-muted); text-align: center;">
+              🟢 Puntos dentro (x² + y² &le; 1) &nbsp;&bull;&nbsp; 🔴 Puntos fuera
+            </div>
+            <button class="btn btn-primary" id="btnSimularMonteCarlo" style="margin-top: 0.75rem;">
+              🎯 Lanzar +1,000 Dardos en Vivo
+            </button>
+          </div>
+
+          <!-- Métricas -->
+          <div>
+            <div class="grid-2" style="margin-bottom: 1rem;">
+              <div class="metric-box">
+                <div class="metric-label">π Estimado (π̂)</div>
+                <div class="metric-value" id="mcPiEst" style="color: var(--accent-green);">0.000000</div>
+              </div>
+              <div class="metric-box">
+                <div class="metric-label">π Teórico Real</div>
+                <div class="metric-value">3.141593</div>
+              </div>
+            </div>
+
+            <div class="grid-2" style="margin-bottom: 1rem;">
+              <div class="metric-box">
+                <div class="metric-label">Error Relativo %</div>
+                <div class="metric-value" id="mcErrPct">0.0000%</div>
+              </div>
+              <div class="metric-box">
+                <div class="metric-label">Intervalo de Confianza 95%</div>
+                <div class="metric-value" id="mcIC" style="font-size: 0.95rem;">[0.0, 0.0]</div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-title">📊 Conteo de Puntos</div>
+              <div style="display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.9rem;">
+                <div style="display: flex; justify-content: space-between;">
+                  <span style="color: var(--text-muted);">Total pares evaluados:</span>
+                  <strong id="mcPtsTot">0 dardos</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                  <span style="color: var(--accent-green);">Puntos dentro del círculo:</span>
+                  <strong id="mcPtsIn" style="color: var(--accent-green);">0</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                  <span style="color: var(--accent-red);">Puntos fuera del círculo:</span>
+                  <strong id="mcPtsOut" style="color: var(--accent-red);">0</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pane-nav">
+          <button class="btn btn-secondary btn-prev">⬅ Anterior</button>
+          <button class="btn btn-primary btn-next">Siguiente: Resumen Global ➡</button>
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <!-- PESTAÑA 7: RESUMEN GLOBAL -->
+      <!-- ============================================================ -->
+      <section class="tab-pane" id="pane-resumen">
+        <div class="pane-header">
+          <h2>7. Resumen Global de la Batería de Pruebas</h2>
+          <p>Consolidado final de todas las pruebas estadísticas para certificar la validez de los números para simulación.</p>
+        </div>
+
+        <div class="verdict-banner success" id="resumenGlobalBanner">
+          <!-- Llenado dinámico -->
+        </div>
+
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Prueba Evaluada</th>
+                <th>Estadístico Calculado</th>
+                <th>Valor Crítico</th>
+                <th>Estado Final</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyResumen"></tbody>
+          </table>
+        </div>
+
+        <div class="pane-nav">
+          <button class="btn btn-secondary btn-prev">⬅ Anterior</button>
+          <button class="btn btn-primary" onclick="switchTab('datos')">🔄 Volver al Inicio (Paso 1)</button>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="web/app.js"></script>
+</body>
+</html>

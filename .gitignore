@@ -1,0 +1,20 @@
+# Binarios ejecutables
+pruebas_simulacion
+pruebas_gui
+*.exe
+*.out
+
+# Archivos objeto
+*.o
+src/*.o
+src/gui/*.o
+
+# Archivos de sistema / editores
+.DS_Store
+*.swp
+*~
+.vscode/
+.idea/
+.fuse*
+__pycache__/
+*.pyc
