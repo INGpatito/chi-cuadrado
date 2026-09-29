@@ -10,7 +10,7 @@ jobs:
   deploy:
     runs-on:
       - self-hosted
-      - linux
+      
     env:
       APP_DIR: ~/chi-cuadrado
 
